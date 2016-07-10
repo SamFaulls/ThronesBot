@@ -17,3 +17,10 @@ Pre-requisits:
 To run:
 - Insert your slack token at the bottom of the script (TODO: make config file for this)
 - Run the script with python 3 or later
+
+
+
+Much thanks to:
+- ThronesDB for their awesome API https://github.com/Alsciende/thronesdb
+- SlackClient https://github.com/slackhq/python-slackclient
+- All my pedantic testers
