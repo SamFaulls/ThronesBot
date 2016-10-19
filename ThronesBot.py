@@ -5,6 +5,7 @@ import json
 import time
 import re
 import urllib.request
+import traceback
 from slackclient import SlackClient
 
 class slackBot(object):
@@ -41,9 +42,10 @@ class slackBot(object):
                     self.ping()
                     time.sleep(1)
             except:
-                connect = True
-                while(connect):
+                connect = False
+                while not connect:
                     connect = self.connect()
+                self.start()
                     
 
     def read(self, data):
@@ -52,7 +54,7 @@ class slackBot(object):
             try:
                 self.processMessage(data)
             except:
-                print('Error happened lol I can\'t Python')
+                print('Error happened lol I can\'t Python', sys.exc_info(), traceback.print_tb(sys.exc_info()[2]))
 
     def write(self):
         ''' Posts messages from the queue to the channel, including any attachments''' 
@@ -68,7 +70,7 @@ class slackBot(object):
                 result = self.sc.api_call("chat.postMessage",
                                           channel='#' + output[0],
                                           text=message,
-                                          attachments=json.dumps([output[2]]),
+                                          attachments=json.dumps(output[2]),
                                           username="ThronesBot",
                                           icon_url=self.icon)
                                           
@@ -128,7 +130,7 @@ class thronesPlugin(object):
         
         # List of distinct functions to be evaluated in turn
         # Note: processCard should be last as a 'default'
-        functionList = ['processPackStatus', 'processHelp', 'processCard']
+        functionList = ['processPackStatus', 'processPackList', 'processHelp', 'processCard']
         
         for function in functionList:
             match = eval("self." + function)(message)
@@ -224,6 +226,32 @@ class thronesPlugin(object):
             slackBot.queueResponse(self.slackBot, self.helpMessage)
             
             return True
+        
+    def processPackList(self, message):
+        ''' Method to return all cards in a pack'''
+        # Split message
+        deconstMessage = message.split(':')
+        if len(deconstMessage) < 2:
+            return False
+        
+        command = deconstMessage[0]
+        pack = deconstMessage[1]
+        
+        # Check for pack command and check pack is given
+        if command.lower() == 'pack' and pack != None:
+            # Get all cards in given pack
+            packCards = []
+            for card in self.cardsList:
+                if pack.lower() == card["pack_code"].lower():
+                    packCards.append(card)
+            # Build the response from cards list
+            response = pack + " - " + packCards[0]['pack_name'] + ":"
+            packResponse = self.buildPackResponse(packCards)
+            # Queue response for sending
+            slackBot.queueResponse(self.slackBot, response, packResponse)
+            return True
+        
+        else: return False
 
     def buildCardResponse(self, card):
         ''' Method to build response from an individual card, extracting then
@@ -274,7 +302,39 @@ class thronesPlugin(object):
         attachment = {"mrkdwn_in" : ["pretext", "text", "fields"], 
                       "pretext" : cardPretext, "text" : cardText, "color" : cardColour}
          
-        return attachment
+        return [attachment]
+    
+    def buildPackResponse(self, packCards):
+        
+        
+        attachmentMap = self.colourMap.copy()
+        for house in attachmentMap.keys():
+            attachmentMap[house] = {"mrkdwn_in" : ["pretext", "text", "fields"], 
+                      "color" : self.colourMap[house], "fields" : []}
+            
+        for card in packCards:
+            # Build card title - Unique + name
+            cardTitle = ""
+            if card['is_unique']:
+                cardTitle += ":_gotunique: "
+            cardTitle += card['name']
+            # Build card value - Short representation
+            cardValue = ":_got" + card['faction_code'] + ": " + card['type_name']
+            # Set card representation fields
+            cardRep = {"title" : cardTitle,
+                       "value" : cardValue,
+                       "short" : True}
+            # Add card representation to faction attachment
+            attachmentMap[card['faction_code']]["fields"].append(cardRep)
+        
+        # Add all faction attachments to list
+        attachments = []
+        for house in attachmentMap.keys():
+            attachments.append(attachmentMap[house])
+            
+        return attachments
+        
+        
          
     def formatText(self , htmlText):
         '''Format text, converting HTML tags to markdown'''
@@ -307,7 +367,6 @@ class thronesPlugin(object):
                           'martell' : '#ff9900',
                           'neutral' : '#664400'}
                           
-         
 
 token = "xxxxxxxxxxxxxxx"
 bot = slackBot(token)
