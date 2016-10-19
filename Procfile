@@ -1,1 +1,1 @@
-web: gunicorn ThronesBot.py
+worker: python ThronesBot.py start
