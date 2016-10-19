@@ -7,6 +7,7 @@ Functions:
 - If multiple cards of the same name, define pack code: [[Card Name:Pack Code]] ie [[Eddard Stark:WotN]]
 - Supports substring searches ie [[eddard:core]]
 - Display the latest pack release status from FFG: [[pack status]]
+- Display all cards in a pack: [[pack:Pack Code]] ie [[pack:TtB]]
 
 All commands are case in-sensitive
 
