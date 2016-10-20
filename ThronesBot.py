@@ -1,6 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
+import os
 import json
 import time
 import re
@@ -368,6 +369,6 @@ class thronesPlugin(object):
                           'neutral' : '#664400'}
                           
 
-token = "xxxxxxxxxxxxxxx"
+token = os.environ.get("token")
 bot = slackBot(token)
 bot.start()
