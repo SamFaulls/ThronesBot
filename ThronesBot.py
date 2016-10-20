@@ -315,15 +315,15 @@ class thronesPlugin(object):
             
         for card in packCards:
             # Build card title - Unique + name
-            cardTitle = ""
+            cardTitle = ":_got" + card['type_code'] + ":"
             if card['is_unique']:
                 cardTitle += ":_gotunique: "
             cardTitle += card['name']
             # Build card value - Short representation
-            cardValue = ":_got" + card['faction_code'] + ": " + card['type_name']
+            # cardValue = ":_got" + card['faction_code'] + ": " + card['type_name']
             # Set card representation fields
             cardRep = {"title" : cardTitle,
-                       "value" : cardValue,
+                       "value" : None,
                        "short" : True}
             # Add card representation to faction attachment
             attachmentMap[card['faction_code']]["fields"].append(cardRep)
